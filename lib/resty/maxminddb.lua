@@ -1,6 +1,4 @@
---[[
-    a lua interface (build with luajit ffi) for  maxminddb to get country code from ip address
-]]
+-- Copyright (C) Anjia (anjia0532)
 
 local json                = require('cjson') 
 local json_encode         = json.encode
@@ -16,6 +14,10 @@ local ffi                 = require ('ffi')
 local ffi_new             = ffi.new
 local ffi_str             = ffi.string
 local ffi_cast            = ffi.cast
+
+local _M    ={}
+_M._VERSION = '0.01'
+local mt = { __index = _M }
 
 ffi.cdef[[
 
@@ -150,9 +152,6 @@ local maxm     = ffi.load('libmaxminddb.so')
 --https://github.com/maxmind/libmaxminddb
 
 
-local _M    ={}
-
-local mt = { __index = _M }
 
 function _M.new(maxmind_country_geoip2_file)
    
