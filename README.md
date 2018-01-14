@@ -144,7 +144,7 @@ References
 
 Bug Reports
 ---
-Please report bugs by filing an issue with our GitHub issue tracker at https://github.com/lilien1010/libmaxminddb/issues
+Please report bugs by filing an issue with our GitHub issue tracker at https://github.com/anjia0532/lua-resty-maxminddb/issues
 
 If the bug is casued by libmaxminddb  tracker at https://github.com/maxmind/libmaxminddb/issues
 
