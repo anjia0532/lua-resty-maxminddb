@@ -23,7 +23,7 @@ Synopsis
 
   ngx.say("full :",cjson.encode(res))
   if ngx.var.arg_node then
-    ngx.say("node name:",ngx.var.arg_node," ,value:":cjson.encode(res[ngx.var.arg_node] or {}))
+    ngx.say("node name:",ngx.var.arg_node," ,value:", cjson.encode(res[ngx.var.arg_node] or {}))
   end
 ```
 
