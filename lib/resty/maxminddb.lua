@@ -16,7 +16,7 @@ local ffi_str             = ffi.string
 local ffi_cast            = ffi.cast
 
 local _M    ={}
-_M._VERSION = '0.01'
+_M._VERSION = '0.02'
 local mt = { __index = _M }
 
 ffi.cdef[[
@@ -320,7 +320,8 @@ function _M:lookup(ip)
     return nil,'no data'
   end
   
-  return json_decode(table.concat(resultTab)),nil
+  
+  return json_decode(table.concat(resultTab or {})),nil
 end
  
 -- https://www.maxmind.com/en/geoip2-databases  you should download  the mmdb file from maxmind
