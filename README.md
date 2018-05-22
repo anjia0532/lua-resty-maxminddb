@@ -2,6 +2,22 @@ Name
 ---
 lua-resty-maxminddb - A Lua library for reading [MaxMind's Geolocation database format](https://maxmind.github.io/MaxMind-DB/)  (aka mmdb or geoip2).
 
+
+Prerequisites
+---
+
+**Note**
+
+[Error at lookup IP](https://github.com/anjia0532/lua-resty-maxminddb/issues/5)
+
+[bad argument #1 to 'concat' (table expected, got nil)](https://github.com/anjia0532/lua-resty-maxminddb/issues/4)
+
+- [maxmind/libmaxminddb][]
+- [openresty][]
+- [GeoLite2 Free Downloadable Databases][linkGeolite2FreeDownloadableDatabases]
+- [maxmind/geoipupdate][]
+
+
 Installation
 ---
 ```bash
@@ -126,13 +142,6 @@ node name: city, value: {
 }
 
 ```
-
-Prerequisites
----
-- [maxmind/libmaxminddb][]
-- [openresty][]
-- [GeoLite2 Free Downloadable Databases][linkGeolite2FreeDownloadableDatabases]
-- [maxmind/geoipupdate][]
 
 References
 ---
