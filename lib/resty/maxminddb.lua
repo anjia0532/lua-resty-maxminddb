@@ -321,7 +321,7 @@ function _M:lookup(ip)
   end
   
   
-  return json_decode(table.concat(resultTab or {'{','}'})),nil -- fix https://github.com/anjia0532/lua-resty-maxminddb/issues/5#issuecomment-390845118
+  return json_decode(table.concat(resultTap or {'{','}'})),nil -- fix https://github.com/anjia0532/lua-resty-maxminddb/issues/5#issuecomment-390845118
 end
  
 -- https://www.maxmind.com/en/geoip2-databases  you should download  the mmdb file from maxmind
