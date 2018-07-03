@@ -6,15 +6,22 @@ lua-resty-maxminddb - A Lua library for reading [MaxMind's Geolocation database 
 Prerequisites
 ---
 
-**Note**
+**Bug fixed**
 
 [Error at lookup IP](https://github.com/anjia0532/lua-resty-maxminddb/issues/5)
 
 [bad argument #1 to 'concat' (table expected, got nil)](https://github.com/anjia0532/lua-resty-maxminddb/issues/4)
 
+[Memory leak](https://github.com/anjia0532/lua-resty-maxminddb/issues/6)
+
+
+**Note**
 - [maxmind/libmaxminddb][]
+
 - [openresty][]
+
 - [GeoLite2 Free Downloadable Databases][linkGeolite2FreeDownloadableDatabases]
+
 - [maxmind/geoipupdate][]
 
 
@@ -27,19 +34,20 @@ opm get anjia0532/lua-resty-maxminddb
 Synopsis
 ---
 ```
+  local cjson = require 'cjson'
   local geo = require 'resty.maxminddb'
+  if not geo.initted() then
+      geo.init("/path/to/GeoLite2-City.mmdb")
+  end
+  local res,err = geo.lookup(ngx.var.arg_ip or ngx.var.remote_addr) --support ipv6 e.g. 2001:4860:0:1001::3004:ef68
 
-  local maxm = geo.new("/path/to/GeoLite2-City.mmdb")
-   
-  local res,err = maxm:lookup(ngx.var.arg_ip or ngx.var.remote_addr) --support ipv6 e.g. 2001:4860:0:1001::3004:ef68
-  
-  if not res then 
-    ngx.log(ngx.ERR,'failed to lookup by ip ,reason:',err)
+  if not res then
+      ngx.log(ngx.ERR,'failed to lookup by ip ,reason:',err)
   end
 
   ngx.say("full :",cjson.encode(res))
   if ngx.var.arg_node then
-    ngx.say("node name:",ngx.var.arg_node," ,value:", cjson.encode(res[ngx.var.arg_node] or {}))
+     ngx.say("node name:",ngx.var.arg_node," ,value:", cjson.encode(res[ngx.var.arg_node] or {}))
   end
 ```
 
