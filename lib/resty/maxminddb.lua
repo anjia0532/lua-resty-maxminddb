@@ -16,7 +16,7 @@ local ffi_str             = ffi.string
 local ffi_cast            = ffi.cast
 
 local _M    ={}
-_M._VERSION = '0.04'
+_M._VERSION = '0.05'
 local mt = { __index = _M }
 
 ffi.cdef[[
@@ -111,6 +111,7 @@ int MMDB_open(const char *const filename, uint32_t flags, MMDB_s *const mmdb);
 int MMDB_aget_value(MMDB_entry_s *const start,  MMDB_entry_data_s *const entry_data,  const char *const *const path);
 char *MMDB_strerror(int error_code);
 int MMDB_get_entry_data_list(MMDB_entry_s *start, MMDB_entry_data_list_s **const entry_data_list);
+void MMDB_free_entry_data_list(MMDB_entry_data_list_s *const entry_data_list);
 ]]
 
 -- error codes 
@@ -148,18 +149,22 @@ local MMDB_DATA_TYPE_BOOLEAN                        =   14
 local MMDB_DATA_TYPE_FLOAT                          =   15
 
 -- you should install the libmaxminddb to your system
-local maxm     = ffi.load('libmaxminddb.so')
+local maxm                                          = ffi.load('libmaxminddb.so')
+local mmdb                                          = ffi_new('MMDB_s')
+local initted                                       = false
 --https://github.com/maxmind/libmaxminddb
 
+function _M.init(dbfile)
+  if not initted then
+    initted = true
+    local file_name_ip2   = ffi_new('char[?]',#dbfile,dbfile)
+    local maxmind_ready   = maxm.MMDB_open(file_name_ip2,0,mmdb)
+  end
+  return initted
+end
 
-
-function _M.new(maxmind_country_geoip2_file)
-   
-  local mmdb = ffi_new('MMDB_s') 
-  local file_name_ip2 = ffi_new('char[?]',#maxmind_country_geoip2_file,maxmind_country_geoip2_file)
-  local maxmind_reday = maxm.MMDB_open(file_name_ip2,0,mmdb)
-
-  return setmetatable({ mmdb=mmdb }, mt);
+function _M.initted()
+    return initted
 end
 
 -- https://github.com/maxmind/libmaxminddb/blob/master/src/maxminddb.c#L1938 
@@ -289,13 +294,17 @@ local function _dump_entry_data_list(entry_data_list,status,resultTab)
   return entry_data_list,status,resultTab
 end
 
-function _M:lookup(ip)
+function _M.lookup(ip)
 
+  if not initted then
+      return nil, "not initialized"
+  end
+  
   local ip_str = ffi_cast('const char *',ffi_new('char[?]',#ip+1,ip))
   local gai_error = ffi_new('int[1]')
   local mmdb_error = ffi_new('int[1]')
 
-  local result = maxm.MMDB_lookup_string(self.mmdb,ip_str,gai_error,mmdb_error)
+  local result = maxm.MMDB_lookup_string(mmdb,ip_str,gai_error,mmdb_error)
 
   if mmdb_error[0] ~= MMDB_SUCCESS then
     return nil,'fail when lookup'
@@ -315,6 +324,7 @@ function _M:lookup(ip)
   local mmdb_error = maxm.MMDB_get_entry_data_list(result.entry,entry_data_list)
   
   local _,status,resultTap = _dump_entry_data_list(entry_data_list)
+  maxm.MMDB_free_entry_data_list(entry_data_list[0])
   
   if status ~= MMDB_SUCCESS then
     return nil,'no data'
