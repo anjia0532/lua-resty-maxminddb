@@ -8,11 +8,11 @@ Prerequisites
 
 **Bug fixed**
 
-[Error at lookup IP](https://github.com/anjia0532/lua-resty-maxminddb/issues/5)
+- [Error at lookup IP](https://github.com/anjia0532/lua-resty-maxminddb/issues/5)
 
-[bad argument #1 to 'concat' (table expected, got nil)](https://github.com/anjia0532/lua-resty-maxminddb/issues/4)
+- [bad argument #1 to 'concat' (table expected, got nil)](https://github.com/anjia0532/lua-resty-maxminddb/issues/4)
 
-[Memory leak](https://github.com/anjia0532/lua-resty-maxminddb/issues/6)
+- [Memory leak](https://github.com/anjia0532/lua-resty-maxminddb/issues/6)
 
 
 **Note**
