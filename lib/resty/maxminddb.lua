@@ -16,7 +16,7 @@ local ffi_str             = ffi.string
 local ffi_cast            = ffi.cast
 
 local _M    ={}
-_M._VERSION = '0.05'
+_M._VERSION = '0.06'
 local mt = { __index = _M }
 
 ffi.cdef[[
