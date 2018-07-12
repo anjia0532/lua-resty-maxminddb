@@ -241,6 +241,10 @@ local function _dump_entry_data_list(entry_data_list,status,resultTab)
       end
       
       size = size -1 
+      -- thanks for https://github.com/anjia0532/lua-resty-maxminddb/issues/7
+      if size > 0 then
+        table.insert(resultTab,",")
+      end
     end
     table.insert(resultTab,"]")
 
