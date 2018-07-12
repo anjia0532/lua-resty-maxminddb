@@ -14,6 +14,8 @@ Prerequisites
 
 - [Memory leak](https://github.com/anjia0532/lua-resty-maxminddb/issues/6)
 
+- [Multiple subdivisions](https://github.com/anjia0532/lua-resty-maxminddb/issues/7)
+
 
 **Note**
 - [maxmind/libmaxminddb][]
