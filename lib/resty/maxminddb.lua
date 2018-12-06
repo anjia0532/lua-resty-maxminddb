@@ -16,7 +16,7 @@ local ffi_str             = ffi.string
 local ffi_cast            = ffi.cast
 
 local _M    ={}
-_M._VERSION = '1.0.0'
+_M._VERSION = '1.0.1'
 local mt = { __index = _M }
 
 ffi.cdef[[
@@ -324,8 +324,12 @@ function _M.lookup(ip)
   end
 
   local entry_data_list = ffi_cast('MMDB_entry_data_list_s **const',ffi_new("MMDB_entry_data_list_s"))
-  
-  local mmdb_error = maxm.MMDB_get_entry_data_list(result.entry,entry_data_list)
+
+  local status = maxm.MMDB_get_entry_data_list(result.entry,entry_data_list)
+
+  if status ~= MMDB_SUCCESS then
+    return nil,'MMDB_get_entry_data_list failed while populating description.'
+  end  
   
   local _,status,resultTap = _dump_entry_data_list(entry_data_list)
   maxm.MMDB_free_entry_data_list(entry_data_list[0])
