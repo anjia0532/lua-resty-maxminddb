@@ -162,15 +162,15 @@ end
 
 function _M.init(dbfile)
   if not initted then
-    local file_name_ip2   = ffi_new('char[?]',#dbfile,dbfile)
-    local maxmind_ready   = maxm.MMDB_open(file_name_ip2,0,mmdb)
+    local maxmind_ready   = maxm.MMDB_open(dbfile,0,mmdb)
 
     if maxmind_ready ~= MMDB_SUCCESS then
         return nil, mmdb_strerror(maxmind_ready)
     end
-
-    ffi_gc(mmdb, maxm.MMDB_close)
+    
     initted = true
+    
+    ffi_gc(mmdb, maxm.MMDB_close)
   end
   return initted
 end
@@ -316,11 +316,10 @@ function _M.lookup(ip)
       return nil, "not initialized"
   end
   
-  local ip_str = ffi_cast('const char *',ffi_new('char[?]',#ip+1,ip))
   local gai_error = ffi_new('int[1]')
   local mmdb_error = ffi_new('int[1]')
 
-  local result = maxm.MMDB_lookup_string(mmdb,ip_str,gai_error,mmdb_error)
+  local result = maxm.MMDB_lookup_string(mmdb,ip,gai_error,mmdb_error)
 
   if mmdb_error[0] ~= MMDB_SUCCESS then
     return nil,'fail when lookup'
