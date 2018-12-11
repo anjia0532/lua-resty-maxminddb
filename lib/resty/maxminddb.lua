@@ -17,7 +17,7 @@ local ffi_cast            = ffi.cast
 local ffi_gc              = ffi.gc
 
 local _M    ={}
-_M._VERSION = '1.0.1'
+_M._VERSION = '1.2.0'
 local mt = { __index = _M }
 
 ffi.cdef[[
