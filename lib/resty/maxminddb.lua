@@ -14,6 +14,7 @@ local ffi                 = require ('ffi')
 local ffi_new             = ffi.new
 local ffi_str             = ffi.string
 local ffi_cast            = ffi.cast
+local ffi_gc              = ffi.gc
 
 local _M    ={}
 _M._VERSION = '1.0.1'
@@ -108,6 +109,7 @@ typedef  char * pchar;
 
 MMDB_lookup_result_s MMDB_lookup_string(MMDB_s *const mmdb,   const char *const ipstr, int *const gai_error,int *const mmdb_error);
 int MMDB_open(const char *const filename, uint32_t flags, MMDB_s *const mmdb);
+void MMDB_close(MMDB_s *const mmdb);
 int MMDB_aget_value(MMDB_entry_s *const start,  MMDB_entry_data_s *const entry_data,  const char *const *const path);
 char *MMDB_strerror(int error_code);
 int MMDB_get_entry_data_list(MMDB_entry_s *start, MMDB_entry_data_list_s **const entry_data_list);
@@ -154,10 +156,21 @@ local mmdb                                          = ffi_new('MMDB_s')
 local initted                                       = false
 --https://github.com/maxmind/libmaxminddb
 
+local function mmdb_strerror(rc)
+    return ffi_str(maxm.MMDB_strerror(rc))
+end
+
 function _M.init(dbfile)
   if not initted then
-    initted = true
     local maxmind_ready   = maxm.MMDB_open(dbfile,0,mmdb)
+
+    if maxmind_ready ~= MMDB_SUCCESS then
+        return nil, mmdb_strerror(maxmind_ready)
+    end
+    
+    initted = true
+    
+    ffi_gc(mmdb, maxm.MMDB_close)
   end
   return initted
 end
