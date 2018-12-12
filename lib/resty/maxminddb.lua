@@ -15,6 +15,7 @@ local ffi_new             = ffi.new
 local ffi_str             = ffi.string
 local ffi_cast            = ffi.cast
 local ffi_gc              = ffi.gc
+local C                   = ffi.C
 
 local _M    ={}
 _M._VERSION = '1.2.0'
@@ -114,6 +115,8 @@ int MMDB_aget_value(MMDB_entry_s *const start,  MMDB_entry_data_s *const entry_d
 char *MMDB_strerror(int error_code);
 int MMDB_get_entry_data_list(MMDB_entry_s *start, MMDB_entry_data_list_s **const entry_data_list);
 void MMDB_free_entry_data_list(MMDB_entry_data_list_s *const entry_data_list);
+
+const char *gai_strerror(int errcode);
 ]]
 
 -- error codes 
@@ -158,6 +161,10 @@ local initted                                       = false
 
 local function mmdb_strerror(rc)
     return ffi_str(maxm.MMDB_strerror(rc))
+end
+
+local function gai_strerror(rc)
+    return ffi_str(C.gai_strerror(rc))
 end
 
 function _M.init(dbfile)
@@ -322,15 +329,14 @@ function _M.lookup(ip)
   local result = maxm.MMDB_lookup_string(mmdb,ip,gai_error,mmdb_error)
 
   if mmdb_error[0] ~= MMDB_SUCCESS then
-    return nil,'fail when lookup'
+    return nil,'lookup failed: ' .. mmdb_strerror(mmdb_error[0])
   end
 
   if gai_error[0] ~= MMDB_SUCCESS then
-    return nil,'ga error'
+    return nil,'lookup failed: ' .. gai_strerror(gai_error[0])
   end
 
   if true ~= result.found_entry then
-    ngx_log(ngx_ERR, "stream lua mmdb lookup: entry not found")
     return nil,'not found'
   end
 
@@ -339,14 +345,14 @@ function _M.lookup(ip)
   local status = maxm.MMDB_get_entry_data_list(result.entry,entry_data_list)
 
   if status ~= MMDB_SUCCESS then
-    return nil,'MMDB_get_entry_data_list failed while populating description.'
+    return nil,'get entry data failed: ' .. mmdb_strerror(status)
   end  
   
   local _,status,resultTap = _dump_entry_data_list(entry_data_list)
   maxm.MMDB_free_entry_data_list(entry_data_list[0])
   
   if status ~= MMDB_SUCCESS then
-    return nil,'no data'
+    return nil,'dump entry data failed: ' .. mmdb_strerror(status)
   end
   
   
