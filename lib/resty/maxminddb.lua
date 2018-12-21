@@ -181,25 +181,20 @@ end
 
 -- https://github.com/maxmind/libmaxminddb/blob/master/src/maxminddb.c#L1938 
 -- LOCAL MMDB_entry_data_list_s *dump_entry_data_list( FILE *stream, MMDB_entry_data_list_s *entry_data_list, int indent, int *status)
-local function _dump_entry_data_list(entry_data_list,status,resultTab)
+local function _dump_entry_data_list(entry_data_list,status)
 
   if not entry_data_list then
-    return nil,nil,resultTab
+    return nil,MMDB_INVALID_DATA_ERROR
   end
-  
-  if not resultTab then
-    resultTab = {}
-  end
-  
   
   local entry_data_item = entry_data_list[0].entry_data
   local data_type = entry_data_item.type
   local data_size = entry_data_item.data_size
+  local result
   
   if data_type == MMDB_DATA_TYPE_MAP then
-    table.insert(resultTab,"{")
+    result = {}
     
-    local flag = false
     local size = entry_data_item.data_size
     
     entry_data_list = entry_data_list[0].next
@@ -211,54 +206,48 @@ local function _dump_entry_data_list(entry_data_list,status,resultTab)
       data_size = entry_data_item.data_size
       
       if MMDB_DATA_TYPE_UTF8_STRING  ~= data_type then
-        return nil,MMDB_INVALID_DATA_ERROR,resultTab
+        return nil,MMDB_INVALID_DATA_ERROR
       end
       
-      local val = ffi_str(entry_data_item.utf8_string,data_size)
+      local key = ffi_str(entry_data_item.utf8_string,data_size)
 
-      if not val then
-        return nil,MMDB_OUT_OF_MEMORY_ERROR,resultTab
+      if not key then
+        return nil,MMDB_OUT_OF_MEMORY_ERROR
       end
       
-      -- if latest str is { ,dont append `,`
-      table.insert(resultTab,(flag and ',"%s":' or '"%s":'):format(val))
-      
-      flag = true
-      
+      local val
       entry_data_list = entry_data_list[0].next
-      entry_data_list,status,resultTab = _dump_entry_data_list(entry_data_list,status,resultTab)
+      entry_data_list,status,val = _dump_entry_data_list(entry_data_list)
       
       if status ~= MMDB_SUCCESS then
-        return nil,nil,resultTab
+        return nil,status
       end
+
+      result[key] = val
       
       size = size -1 
     end
-    table.insert(resultTab,"}")
     
 
   elseif entry_data_list[0].entry_data.type == MMDB_DATA_TYPE_ARRAY then
     local size = entry_data_list[0].entry_data.data_size
+    result = {}
 
-    table.insert(resultTab,"[")
-    
     entry_data_list = entry_data_list[0].next
     
-    while(size >0 and entry_data_list)
+    local i = 1
+    while(i <= size and entry_data_list)
     do
-      entry_data_list,status,resultTab = _dump_entry_data_list(entry_data_list,status,resultTab)
+      local val
+      entry_data_list,status,val = _dump_entry_data_list(entry_data_list)
       
       if status ~= MMDB_SUCCESS then
-        return nil,nil,resultTab
+        return nil,nil,val
       end
       
-      size = size -1 
-      -- thanks for https://github.com/anjia0532/lua-resty-maxminddb/issues/7
-      if size > 0 then
-        table.insert(resultTab,",")
-      end
+      result[i] = val
+      i = i + 1
     end
-    table.insert(resultTab,"]")
 
     
   else
@@ -270,20 +259,17 @@ local function _dump_entry_data_list(entry_data_list,status,resultTab)
     -- string type "key":"val"
     -- other type "key":val
     -- default other type
-    local fmt="%s"
     if data_type == MMDB_DATA_TYPE_UTF8_STRING then
       val = ffi_str(entry_data_item.utf8_string,data_size)
-      fmt='"%s"'
       if not val then
         status = MMDB_OUT_OF_MEMORY_ERROR
-        return nil,status,resultTab
+        return nil,status
       end
     elseif data_type == MMDB_DATA_TYPE_BYTES then
       val = ffi_str(ffi_cast('char * ',entry_data_item.bytes),data_size)
-      fmt='"%s"'
       if not val then
         status = MMDB_OUT_OF_MEMORY_ERROR
-        return nil,status,resultTab
+        return nil,status
       end
     elseif data_type == MMDB_DATA_TYPE_DOUBLE then
       val = entry_data_item.double_value
@@ -300,14 +286,15 @@ local function _dump_entry_data_list(entry_data_list,status,resultTab)
     elseif data_type == MMDB_DATA_TYPE_INT32 then
       val = entry_data_item.int32
     else
-      return nil,MMDB_INVALID_DATA_ERROR,resultTab
+      return nil,MMDB_INVALID_DATA_ERROR
     end
     
-    table.insert(resultTab,(fmt):format(val))
+    result = val
     entry_data_list = entry_data_list[0].next
   end
+
   status = MMDB_SUCCESS
-  return entry_data_list,status,resultTab
+  return entry_data_list,status,result
 end
 
 function _M.lookup(ip)
@@ -342,7 +329,7 @@ function _M.lookup(ip)
     return nil,'MMDB_get_entry_data_list failed while populating description.'
   end  
   
-  local _,status,resultTap = _dump_entry_data_list(entry_data_list)
+  local _,status,result = _dump_entry_data_list(entry_data_list)
   maxm.MMDB_free_entry_data_list(entry_data_list[0])
   
   if status ~= MMDB_SUCCESS then
@@ -350,7 +337,7 @@ function _M.lookup(ip)
   end
   
   
-  return json_decode(table.concat(resultTap or {'{','}'})),nil -- fix https://github.com/anjia0532/lua-resty-maxminddb/issues/5#issuecomment-390845118
+  return result
 end
  
 -- https://www.maxmind.com/en/geoip2-databases  you should download  the mmdb file from maxmind
