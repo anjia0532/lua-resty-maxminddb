@@ -335,8 +335,9 @@ function _M.lookup(ip)
     return nil,'get entry data failed: ' .. mmdb_strerror(status)
   end  
   
+  local head = entry_data_list[0] -- Save so this can be passed to free fn.
   local _,status,result = _dump_entry_data_list(entry_data_list)
-  maxm.MMDB_free_entry_data_list(entry_data_list[0])
+  maxm.MMDB_free_entry_data_list(head)
   
   if status ~= MMDB_SUCCESS then
     return nil,'dump entry data failed: ' .. mmdb_strerror(status)
