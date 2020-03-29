@@ -287,7 +287,7 @@ local function _dump_entry_data_list(entry_data_list,status)
     elseif data_type == MMDB_DATA_TYPE_UINT32 then
       val = entry_data_item.uint32
     elseif data_type == MMDB_DATA_TYPE_BOOLEAN then
-      val = entry_data_item.boolean == 1
+      val = entry_data_item.boolean
     elseif data_type == MMDB_DATA_TYPE_UINT64 then
       val = entry_data_item.uint64
     elseif data_type == MMDB_DATA_TYPE_INT32 then
