@@ -154,9 +154,9 @@ local MMDB_DATA_TYPE_FLOAT                          =   15
 
 -- you should install the libmaxminddb to your system
 local maxm                                          = ffi.load('libmaxminddb')
+--https://github.com/maxmind/libmaxminddb
 local mmdb                                          = ffi_new('MMDB_s')
 local initted                                       = false
---https://github.com/maxmind/libmaxminddb
 
 local function mmdb_strerror(rc)
     return ffi_str(maxm.MMDB_strerror(rc))
