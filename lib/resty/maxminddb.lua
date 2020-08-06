@@ -1,5 +1,6 @@
 -- Copyright (C) Anjia (anjia0532)
 
+-- copy from https://github.com/lilien1010/lua-resty-maxminddb/blob/f96633e2428f8f7bcc1e2a7a28b747b33233a8db/resty/maxminddb.lua#L5-L12
 local json                = require('cjson') 
 local json_encode         = json.encode
 local json_decode         = json.decode
@@ -20,6 +21,7 @@ local _M    ={}
 _M._VERSION = '1.3.1'
 local mt = { __index = _M }
 
+-- copy from https://github.com/lilien1010/lua-resty-maxminddb/blob/f96633e2428f8f7bcc1e2a7a28b747b33233a8db/resty/maxminddb.lua#L36-L126
 ffi.cdef[[
 
 typedef unsigned int mmdb_uint128_t __attribute__ ((__mode__(TI)));
@@ -152,6 +154,7 @@ local MMDB_DATA_TYPE_END_MARKER                     =   13
 local MMDB_DATA_TYPE_BOOLEAN                        =   14
 local MMDB_DATA_TYPE_FLOAT                          =   15
 
+-- copy from https://github.com/lilien1010/lua-resty-maxminddb/blob/f96633e2428f8f7bcc1e2a7a28b747b33233a8db/resty/maxminddb.lua#L136-L138
 -- you should install the libmaxminddb to your system
 local maxm                                          = ffi.load('libmaxminddb')
 --https://github.com/maxmind/libmaxminddb
@@ -309,6 +312,7 @@ function _M.lookup(ip)
       return nil, "not initialized"
   end
   
+  -- copy from https://github.com/lilien1010/lua-resty-maxminddb/blob/f96633e2428f8f7bcc1e2a7a28b747b33233a8db/resty/maxminddb.lua#L159-L176
   local gai_error = ffi_new('int[1]')
   local mmdb_error = ffi_new('int[1]')
 
@@ -345,7 +349,8 @@ function _M.lookup(ip)
   
   return result
 end
- 
+
+-- copy from https://github.com/lilien1010/lua-resty-maxminddb/blob/master/resty/maxminddb.lua#L208
 -- https://www.maxmind.com/en/geoip2-databases  you should download  the mmdb file from maxmind
  
 return _M;
