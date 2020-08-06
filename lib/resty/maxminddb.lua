@@ -9,7 +9,6 @@ local ngx_ERR             = ngx.ERR
 local ngx_CRIT            = ngx.CRIT
 local ngx_INFO            = ngx.INFO
 
-
 local ffi                 = require ('ffi')
 local ffi_new             = ffi.new
 local ffi_str             = ffi.string
@@ -110,12 +109,12 @@ typedef  char * pchar;
 
 MMDB_lookup_result_s MMDB_lookup_string(MMDB_s *const mmdb,   const char *const ipstr, int *const gai_error,int *const mmdb_error);
 int MMDB_open(const char *const filename, uint32_t flags, MMDB_s *const mmdb);
-void MMDB_close(MMDB_s *const mmdb);
 int MMDB_aget_value(MMDB_entry_s *const start,  MMDB_entry_data_s *const entry_data,  const char *const *const path);
 char *MMDB_strerror(int error_code);
+
 int MMDB_get_entry_data_list(MMDB_entry_s *start, MMDB_entry_data_list_s **const entry_data_list);
 void MMDB_free_entry_data_list(MMDB_entry_data_list_s *const entry_data_list);
-
+void MMDB_close(MMDB_s *const mmdb);
 const char *gai_strerror(int errcode);
 ]]
 
