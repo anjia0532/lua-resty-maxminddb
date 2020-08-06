@@ -16,6 +16,8 @@ Prerequisites
 
 - [Multiple subdivisions](https://github.com/anjia0532/lua-resty-maxminddb/issues/7)
 
+**Apology for infringement**
+- https://github.com/anjia0532/lua-resty-maxminddb/issues/25
 
 **Note**
 - [maxmind/libmaxminddb][]
