@@ -13,14 +13,6 @@
 ]]
 
 -- copy from https://github.com/lilien1010/lua-resty-maxminddb/blob/f96633e2428f8f7bcc1e2a7a28b747b33233a8db/resty/maxminddb.lua#L5-L12
-local json                = require('cjson') 
-local json_encode         = json.encode
-local json_decode         = json.decode
-
-local ngx_log             = ngx.log
-local ngx_ERR             = ngx.ERR
-local ngx_CRIT            = ngx.CRIT
-local ngx_INFO            = ngx.INFO
 
 local ffi                 = require ('ffi')
 local ffi_new             = ffi.new
@@ -35,6 +27,8 @@ local mt = { __index = _M }
 
 -- copy from https://github.com/lilien1010/lua-resty-maxminddb/blob/f96633e2428f8f7bcc1e2a7a28b747b33233a8db/resty/maxminddb.lua#L36-L126
 ffi.cdef[[
+
+typedef long int ssize_t;
 
 typedef unsigned int mmdb_uint128_t __attribute__ ((__mode__(TI)));
 
