@@ -17,7 +17,7 @@ jobs:
 
       - name: Build and push opm
         run: |
-           docker run --rm -t -v $(pwd):/tmp openresty/openresty:alpine-fat /bin/sh -c "echo -e 'github_account=${{ secrets.GIT_OWNER }}\ngithub_token=${{ secrets.OPM_GITHUB_TOKEN }}\nupload_server=https://opm.openresty.org\ndownload_server=https://opm.openresty.org' > ~/.opmrc && cat ~/.opmrc && cd /tmp && opm build && opm upload"
+           docker run --rm -t -v $(pwd):/tmp openresty/openresty:alpine-fat /bin/sh -c "echo -e 'github_account=${{ github.actor }}\ngithub_token=${{ secrets.OPM_GITHUB_TOKEN }}\nupload_server=https://opm.openresty.org\ndownload_server=https://opm.openresty.org' > ~/.opmrc && cat ~/.opmrc && cd /tmp && opm build && opm upload"
         shell: bash
 
       - name: Build and push luarocks
