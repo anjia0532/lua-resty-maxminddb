@@ -22,7 +22,7 @@ local ffi_gc              = ffi.gc
 local C                   = ffi.C
 
 local _M    ={}
-_M._VERSION = '1.3.2'
+_M._VERSION = '1.3.3'
 local mt = { __index = _M }
 
 -- copy from https://github.com/lilien1010/lua-resty-maxminddb/blob/f96633e2428f8f7bcc1e2a7a28b747b33233a8db/resty/maxminddb.lua#L36-L126
@@ -126,7 +126,7 @@ void MMDB_close(MMDB_s *const mmdb);
 const char *gai_strerror(int errcode);
 ]]
 
--- error codes 
+-- error codes
 -- https://github.com/maxmind/libmaxminddb/blob/master/include/maxminddb.h#L66
 local MMDB_SUCCESS                                  =   0
 local MMDB_FILE_OPEN_ERROR                          =   1
@@ -182,9 +182,9 @@ function _M.init(dbfile)
     if maxmind_ready ~= MMDB_SUCCESS then
         return nil, mmdb_strerror(maxmind_ready)
     end
-    
+
     initted = true
-    
+
     ffi_gc(mmdb, maxm.MMDB_close)
   end
   return initted
@@ -194,82 +194,82 @@ function _M.initted()
     return initted
 end
 
--- https://github.com/maxmind/libmaxminddb/blob/master/src/maxminddb.c#L1938 
+-- https://github.com/maxmind/libmaxminddb/blob/master/src/maxminddb.c#L1938
 -- LOCAL MMDB_entry_data_list_s *dump_entry_data_list( FILE *stream, MMDB_entry_data_list_s *entry_data_list, int indent, int *status)
 local function _dump_entry_data_list(entry_data_list,status)
 
   if not entry_data_list then
     return nil,MMDB_INVALID_DATA_ERROR
   end
-  
+
   local entry_data_item = entry_data_list[0].entry_data
   local data_type = entry_data_item.type
   local data_size = entry_data_item.data_size
   local result
-  
+
   if data_type == MMDB_DATA_TYPE_MAP then
     result = {}
-    
+
     local size = entry_data_item.data_size
-    
+
     entry_data_list = entry_data_list[0].next
-    
+
     while(size > 0 and entry_data_list)
-    do 
+    do
       entry_data_item = entry_data_list[0].entry_data
       data_type = entry_data_item.type
       data_size = entry_data_item.data_size
-      
+
       if MMDB_DATA_TYPE_UTF8_STRING  ~= data_type then
         return nil,MMDB_INVALID_DATA_ERROR
       end
-      
+
       local key = ffi_str(entry_data_item.utf8_string,data_size)
 
       if not key then
         return nil,MMDB_OUT_OF_MEMORY_ERROR
       end
-      
+
       local val
       entry_data_list = entry_data_list[0].next
       entry_data_list,status,val = _dump_entry_data_list(entry_data_list)
-      
+
       if status ~= MMDB_SUCCESS then
         return nil,status
       end
 
       result[key] = val
-      
-      size = size -1 
+
+      size = size -1
     end
-    
+
 
   elseif entry_data_list[0].entry_data.type == MMDB_DATA_TYPE_ARRAY then
     local size = entry_data_list[0].entry_data.data_size
     result = {}
 
     entry_data_list = entry_data_list[0].next
-    
+
     local i = 1
     while(i <= size and entry_data_list)
     do
       local val
       entry_data_list,status,val = _dump_entry_data_list(entry_data_list)
-      
+
       if status ~= MMDB_SUCCESS then
         return nil,nil,val
       end
-      
+
       result[i] = val
       i = i + 1
     end
 
-    
+
   else
     entry_data_item = entry_data_list[0].entry_data
     data_type = entry_data_item.type
     data_size = entry_data_item.data_size
-    
+
     local val
     -- string type "key":"val"
     -- other type "key":val
@@ -303,7 +303,7 @@ local function _dump_entry_data_list(entry_data_list,status)
     else
       return nil,MMDB_INVALID_DATA_ERROR
     end
-    
+
     result = val
     entry_data_list = entry_data_list[0].next
   end
@@ -317,7 +317,7 @@ function _M.lookup(ip)
   if not initted then
       return nil, "not initialized"
   end
-  
+
   -- copy from https://github.com/lilien1010/lua-resty-maxminddb/blob/f96633e2428f8f7bcc1e2a7a28b747b33233a8db/resty/maxminddb.lua#L159-L176
   local gai_error = ffi_new('int[1]')
   local mmdb_error = ffi_new('int[1]')
@@ -342,21 +342,21 @@ function _M.lookup(ip)
 
   if status ~= MMDB_SUCCESS then
     return nil,'get entry data failed: ' .. mmdb_strerror(status)
-  end  
-  
+  end
+
   local head = entry_data_list[0] -- Save so this can be passed to free fn.
   local _,status,result = _dump_entry_data_list(entry_data_list)
   maxm.MMDB_free_entry_data_list(head)
-  
+
   if status ~= MMDB_SUCCESS then
     return nil,'dump entry data failed: ' .. mmdb_strerror(status)
   end
-  
-  
+
+
   return result
 end
 
 -- copy from https://github.com/lilien1010/lua-resty-maxminddb/blob/master/resty/maxminddb.lua#L208
 -- https://www.maxmind.com/en/geoip2-databases  you should download  the mmdb file from maxmind
- 
+
 return _M;
