@@ -1,5 +1,5 @@
 package = "lua-resty-maxminddb"
-version = "1.3.3-5"
+version = "1.3.3-6"
 supported_platforms = {"linux", "macosx"}
 
 source = {
@@ -27,7 +27,8 @@ build = {
         tar zxf libmaxminddb-1.6.0.tar.gz && \
           cd libmaxminddb-1.6.0 && \
           ./configure && \
-          $(MAKE) -j
+          $(MAKE) -j && \
+          $(MAKE) check
     ]],
     install = {
        lua = {

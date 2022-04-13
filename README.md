@@ -6,6 +6,16 @@ lua-resty-maxminddb - A Lua library for reading [MaxMind's Geolocation database 
 Prerequisites
 ---
 
+**Note**
+- [maxmind/libmaxminddb][]
+
+- [openresty][]
+
+- [GeoLite2 Free Downloadable Databases][linkGeolite2FreeDownloadableDatabases]
+
+- [maxmind/geoipupdate][]
+
+
 **Bug fixed**
 
 - [Error at lookup IP](https://github.com/anjia0532/lua-resty-maxminddb/issues/5)
@@ -19,47 +29,52 @@ Prerequisites
 **Apology for infringement**
 - https://github.com/anjia0532/lua-resty-maxminddb/issues/25
 
-**Note**
-- [maxmind/libmaxminddb][]
-
-- [openresty][]
-
-- [GeoLite2 Free Downloadable Databases][linkGeolite2FreeDownloadableDatabases]
-
-- [maxmind/geoipupdate][]
-
-
 Installation
 ---
 ```bash
+
+# opm (manual install libmaxminddb and download GeoLite2-City.mmdb)
 opm get anjia0532/lua-resty-maxminddb
+
+# luarocks (manual download GeoLite2-City.mmdb)
+luarocks install lua-resty-maxminddb
 ```
 
 Synopsis
 ---
+
 ```
-  local cjson = require 'cjson'
-  local geo = require 'resty.maxminddb'
-  if not geo.initted() then
-      geo.init("/path/to/GeoLite2-City.mmdb")
-  end
-  local res,err = geo.lookup(ngx.var.arg_ip or ngx.var.remote_addr) --support ipv6 e.g. 2001:4860:0:1001::3004:ef68
+server {
+    listen 80;
+    server_name localhost;
+    location / {
+        content_by_lua_block{
+            local cjson = require 'cjson'
+            local geo = require 'resty.maxminddb'
+            if not geo.initted() then
+                geo.init("/path/to/GeoLite2-City.mmdb")
+            end
+            local res,err = geo.lookup(ngx.var.arg_ip or ngx.var.remote_addr) --support ipv6 e.g. 2001:4860:0:1001::3004:ef68
 
-  if not res then
-      ngx.log(ngx.ERR,'failed to lookup by ip ,reason:',err)
-  end
-
-  ngx.say("full :",cjson.encode(res))
-  if ngx.var.arg_node then
-     ngx.say("node name:",ngx.var.arg_node," ,value:", cjson.encode(res[ngx.var.arg_node] or {}))
-  end
+            if not res then
+                ngx.log(ngx.ERR,'failed to lookup by ip ,reason:',err)
+            end
+            ngx.say("full :",cjson.encode(res))
+            if ngx.var.arg_node then
+               ngx.say("node name:",ngx.var.arg_node," ,value:", cjson.encode(res[ngx.var.arg_node] or {}))
+            end
+        }
+    }
+}
 ```
 
 ```bash
   #ipv4
-  $ curl localhost/ip=114.114.114.114&node=city
+  $ curl localhost/?ip=114.114.114.114&node=city
+  
   #ipv6
-  #$ curl localhost/ip=2001:4860:0:1001::3004:ef68&node=country
+  #$ curl localhost/?ip=2001:4860:0:1001::3004:ef68&node=country
+  
   full :{"city":{"geoname_id":1799962,"names":{"en":"Nanjing","ru":"Нанкин","fr":"Nankin","pt-BR":"Nanquim","zh-CN":"南京","es":"Nankín","de":"Nanjing","ja":"南京市"}},"subdivisions":[{"geoname_id":1806260,"names":{"en":"Jiangsu","fr":"Province de Jiangsu","zh-CN":"江苏省"},"iso_code":"32"}],"country":{"geoname_id":1814991,"names":{"en":"China","ru":"Китай","fr":"Chine","pt-BR":"China","zh-CN":"中国","es":"China","de":"China","ja":"中国"},"iso_code":"CN"},"registered_country":{"geoname_id":1814991,"names":{"en":"China","ru":"Китай","fr":"Chine","pt-BR":"China","zh-CN":"中国","es":"China","de":"China","ja":"中国"},"iso_code":"CN"},"location":{"time_zone":"Asia\/Shanghai","longitude":118.7778,"accuracy_radius":50,"latitude":32.0617},"continent":{"geoname_id":6255147,"names":{"en":"Asia","ru":"Азия","fr":"Asie","pt-BR":"Ásia","zh-CN":"亚洲","es":"Asia","de":"Asien","ja":"アジア"},"code":"AS"}}
   node name:city ,value:{"geoname_id":1799962,"names":{"en":"Nanjing","ru":"Нанкин","fr":"Nankin","pt-BR":"Nanquim","zh-CN":"南京","es":"Nankín","de":"Nanjing","ja":"南京市"}}
 ```

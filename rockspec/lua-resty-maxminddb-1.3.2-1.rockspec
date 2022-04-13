@@ -27,7 +27,8 @@ build = {
         tar zxf libmaxminddb-1.6.0.tar.gz && \
           cd libmaxminddb-1.6.0 && \
           ./configure && \
-          $(MAKE) -j
+          $(MAKE) -j && \
+          $(MAKE) check
     ]],
     install = {
        lua = {
