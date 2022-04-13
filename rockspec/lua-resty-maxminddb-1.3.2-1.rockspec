@@ -30,15 +30,13 @@ build = {
           $(MAKE) -j && \
           $(MAKE) check
     ]],
-    modules ={
-        ["resty.maxminddb"]="lib/resty/maxminddb.lua",
-    },
     install = {
        lib = {
+           ["resty.maxminddb"] = "lib/resty/maxminddb.lua",
            ["libmaxminddb.so"] = "libmaxminddb-1.6.0/src/.libs/libmaxminddb.so.0.0.7",
            ["libmaxminddb.so.0 "] = "libmaxminddb-1.6.0/src/.libs/libmaxminddb.so.0.0.7",
            ["libmaxminddb.so.0.0.7"] = "libmaxminddb-1.6.0/src/.libs/libmaxminddb.so.0.0.7",
        },
     },
-    install_command = "cd libmaxminddb-1.6.0 && $(MAKE) install && cp ../lib/resty $(luarocks config deploy_lua_dir)/resty"
+    install_command = "cd libmaxminddb-1.6.0 && $(MAKE) install"
 }
