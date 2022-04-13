@@ -31,6 +31,9 @@ build = {
           $(MAKE) check &&
           $(MAKE) install
     ]],
+    modules ={
+        ["resty.maxminddb"]="lib/resty/maxminddb.lua",
+    },
     install = {
        lib = {
            ["libmaxminddb.so"] = "libmaxminddb-1.6.0/src/.libs/libmaxminddb.so.0.0.7",
