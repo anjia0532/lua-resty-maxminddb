@@ -1,5 +1,5 @@
 package = "lua-resty-maxminddb"
-version = "1.3.3-1"
+version = "1.3.3-4"
 supported_platforms = {"linux", "macosx"}
 
 source = {
