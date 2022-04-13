@@ -34,10 +34,14 @@ Installation
 ```bash
 
 # opm (manual install libmaxminddb and download GeoLite2-City.mmdb)
+# openresty/openresty:alpine and apache/apisix:2.13.0-alpine docker image need to install perl libmaxminddb
+# e.g. apk --no-cache add perl libmaxminddb && ln -s /usr/lib/libmaxminddb.so.0  /usr/lib/libmaxminddb.so
 opm get anjia0532/lua-resty-maxminddb
 
 # luarocks (manual download GeoLite2-City.mmdb)
+# openresty/openresty:alpine and apache/apisix:2.13.0-alpine docker image need to install alpine-sdk perl
 luarocks install lua-resty-maxminddb
+# special apache/apisix:2.13.0-alpine luarocks install lua-resty-maxminddb UNZIP=/usr/bin/unzip
 ```
 
 Synopsis
