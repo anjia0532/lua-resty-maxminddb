@@ -39,9 +39,13 @@ Installation
 opm get anjia0532/lua-resty-maxminddb
 
 # luarocks (manual download GeoLite2-City.mmdb)
-# openresty/openresty:alpine and apache/apisix:2.13.0-alpine docker image need to install alpine-sdk perl
+# openresty/openresty:alpine-fat docker image
 luarocks install lua-resty-maxminddb
-# special apache/apisix:2.13.0-alpine luarocks install lua-resty-maxminddb UNZIP=/usr/bin/unzip
+
+# openresty/openresty:alpine docker image need to install luarocks (ref https://github.com/openresty/docker-openresty/blob/master/alpine/Dockerfile.fat)
+
+# special apache/apisix:2.xx.0-alpine luarocks install lua-resty-maxminddb UNZIP=/usr/bin/unzip
+# e.g. apk --no-cache add perl alpine-sdk && luarocks install lua-resty-maxminddb UNZIP=/usr/bin/unzip
 ```
 
 Synopsis
