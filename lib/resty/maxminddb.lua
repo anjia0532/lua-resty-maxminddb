@@ -181,7 +181,7 @@ function _M.open(dbfile)
     return nil, mmdb_strerror(maxmind_ready)
   end
 
-  return mmdb
+  return mmdb, nil
 end
 
 function _M.close(mmdb)
@@ -313,10 +313,6 @@ end
 
 function _M.lookup(mmdb, ip)
 
-  if not initted then
-      return nil, "not initialized"
-  end
-
   -- copy from https://github.com/lilien1010/lua-resty-maxminddb/blob/f96633e2428f8f7bcc1e2a7a28b747b33233a8db/resty/maxminddb.lua#L159-L176
   local gai_error = ffi_new('int[1]')
   local mmdb_error = ffi_new('int[1]')
@@ -353,6 +349,23 @@ function _M.lookup(mmdb, ip)
 
 
   return result
+end
+
+function _M.queryResult(result, ...) 
+    local arg = {...}
+    if #arg == 0 then
+        return nil
+    end
+
+    local reply = result
+
+    for _, v in pairs(arg) do
+        reply = reply[v]
+        if not reply then
+            return nil
+        end
+    end
+    return reply
 end
 
 -- copy from https://github.com/lilien1010/lua-resty-maxminddb/blob/master/resty/maxminddb.lua#L208
