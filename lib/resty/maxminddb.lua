@@ -164,8 +164,6 @@ local MMDB_DATA_TYPE_FLOAT                          =   15
 -- you should install the libmaxminddb to your system
 local maxm                                          = ffi.load('libmaxminddb')
 --https://github.com/maxmind/libmaxminddb
-local mmdb                                          = ffi_new('MMDB_s')
-local initted                                       = false
 
 local function mmdb_strerror(rc)
     return ffi_str(maxm.MMDB_strerror(rc))
@@ -175,20 +173,21 @@ local function gai_strerror(rc)
     return ffi_str(C.gai_strerror(rc))
 end
 
-function _M.init(dbfile)
-  if not initted then
-    local maxmind_ready   = maxm.MMDB_open(dbfile,0,mmdb)
+function _M.open(dbfile)
+  local mmdb = ffi_new('MMDB_s')
+  local maxmind_ready = maxm.MMDB_open(dbfile,0,mmdb)
 
-    if maxmind_ready ~= MMDB_SUCCESS then
-        return nil, mmdb_strerror(maxmind_ready)
-    end
-
-    initted = true
-
-    ffi_gc(mmdb, maxm.MMDB_close)
+  if maxmind_ready ~= MMDB_SUCCESS then
+    return nil, mmdb_strerror(maxmind_ready)
   end
-  return initted
+
+  return mmdb
 end
+
+function _M.close(mmdb)
+  maxm.MMDB_close(mmdb)
+end
+
 
 function _M.initted()
     return initted
@@ -312,7 +311,7 @@ local function _dump_entry_data_list(entry_data_list,status)
   return entry_data_list,status,result
 end
 
-function _M.lookup(ip)
+function _M.lookup(mmdb, ip)
 
   if not initted then
       return nil, "not initialized"
