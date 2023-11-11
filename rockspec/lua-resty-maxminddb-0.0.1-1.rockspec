@@ -4,7 +4,7 @@ supported_platforms = {"linux", "macosx"}
 
 source = {
    url = "git://github.com/cyberandao/lua-resty-maxminddb",
-   tag = "cyberandao-1.0.0"
+   tag = "cyberandao-1.0.1"
 }
 
 description = {
