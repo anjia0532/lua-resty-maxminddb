@@ -21,8 +21,25 @@ dependencies = {
    -- If you depend on other rocks, add them here
 }
 build = {
-    type = "builtin",
-    modules = {
-      ["resty.maxminddb"] = "lib/resty/maxminddb.lua",
-    }
+    type = "command",
+    build_command = [[
+        wget -O libmaxminddb-1.6.0.tar.gz \
+          https://github.com/maxmind/libmaxminddb/releases/download/1.6.0/libmaxminddb-1.6.0.tar.gz && \
+        tar zxf libmaxminddb-1.6.0.tar.gz && \
+          cd libmaxminddb-1.6.0 && \
+          ./configure && \
+          $(MAKE) -j && \
+          $(MAKE) check
+    ]],
+    install = {
+       lua = {
+           ["resty.maxminddb"] = "lib/resty/maxminddb.lua",
+       },
+       lib = {
+           ["libmaxminddb.so"] = "libmaxminddb-1.6.0/src/.libs/libmaxminddb.so.0.0.7",
+           ["libmaxminddb.so.0 "] = "libmaxminddb-1.6.0/src/.libs/libmaxminddb.so.0.0.7",
+           ["libmaxminddb.so.0.0.7"] = "libmaxminddb-1.6.0/src/.libs/libmaxminddb.so.0.0.7",
+       },
+    },
+    install_command = "cd libmaxminddb-1.6.0 && $(MAKE) install"
 }
