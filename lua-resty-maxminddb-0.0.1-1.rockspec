@@ -31,6 +31,7 @@ build = {
           $(MAKE) -j && \
           $(MAKE) check
     ]],
+    install_command = "cd libmaxminddb-1.6.0 && $(MAKE) install",
     install = {
        lua = {
            ["resty.maxminddb"] = "lib/resty/maxminddb.lua",
@@ -40,6 +41,5 @@ build = {
            ["libmaxminddb.so.0 "] = "libmaxminddb-1.6.0/src/.libs/libmaxminddb.so.0.0.7",
            ["libmaxminddb.so.0.0.7"] = "libmaxminddb-1.6.0/src/.libs/libmaxminddb.so.0.0.7",
        },
-    },
-    install_command = "cd libmaxminddb-1.6.0 && $(MAKE) install"
+    }
 }
