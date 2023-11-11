@@ -27,7 +27,9 @@ build = {
           https://github.com/maxmind/libmaxminddb/releases/download/1.6.0/libmaxminddb-1.6.0.tar.gz && \
         tar zxf libmaxminddb-1.6.0.tar.gz && \
           cd libmaxminddb-1.6.0 && \
-          ./configure
+          ./configure && \
+          $(MAKE) -j
+
     ]],
     install = {
        lua = {
