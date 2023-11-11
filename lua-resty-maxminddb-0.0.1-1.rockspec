@@ -27,7 +27,8 @@ build = {
           https://github.com/maxmind/libmaxminddb/releases/download/1.8.0/libmaxminddb-1.8.0.tar.gz && \
         tar zxf libmaxminddb-1.8.0.tar.gz && \
           cd libmaxminddb-1.8.0 && \
-          ./configure
+          ./configure && \
+          make 
 
     ]],
     install = {
