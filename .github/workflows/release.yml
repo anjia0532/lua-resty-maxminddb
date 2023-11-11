@@ -1,26 +1,34 @@
+# This is a basic workflow to help you get started with Actions
+
 name: Release
 
+# Controls when the workflow will run
 on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     tags:
-      - '*'
+      - "v*.*.*"
+
+  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  build:
-    name: Build and Publish
-    runs-on: ubuntu-latest
+  # This workflow contains a single job called "build"
+  release:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-20.04
+    permissions: write-all
 
+    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Build and push opm
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+      - name: Compress lua-resty-maxminddb
         run: |
-           docker run --rm -t -v $(pwd):/tmp openresty/openresty:alpine-fat /bin/sh -c "echo -e 'github_account=${{ github.actor }}\ngithub_token=${{ secrets.OPM_GITHUB_TOKEN }}\nupload_server=https://opm.openresty.org\ndownload_server=https://opm.openresty.org' > ~/.opmrc && cd /tmp && opm build && opm upload"
-        shell: bash
-
-      - name: Build and push luarocks
-        run: |
-          rockspec=$(ls rockspec/ | grep rockspec | sort -k5,5 -r | head -n1)
-          docker run --rm -t -v $(pwd):/tmp akorn/luarocks:lua5.1-alpine /bin/sh -c "apk --no-cache add alpine-sdk perl zip unzip && cd /tmp && luarocks install dkjson && luarocks upload rockspec/${rockspec} --api-key ${{ secrets.LUAROCKS_API_KEY }}"
+          tar -czvf lua-resty-maxminddb-${{github.ref_name}}.tar.gz ./* 
+      - name: Release package
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            lua-resty-maxminddb-${{github.ref_name}}.tar.gz
