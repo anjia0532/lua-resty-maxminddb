@@ -29,15 +29,5 @@ build = {
           cd libmaxminddb-1.8.0 && \
           ./configure && \
           make 
-    ]],
-    install = {
-       lua = {
-           ["resty.maxminddb"] = "lib/resty/maxminddb.lua",
-       },
-       lib = {
-           ["libmaxminddb.so"] = "libmaxminddb-1.8.0/src/.libs/libmaxminddb.so.0.0.7",
-           ["libmaxminddb.so.0 "] = "libmaxminddb-1.8.0/src/.libs/libmaxminddb.so.0.0.7",
-           ["libmaxminddb.so.0.0.7"] = "libmaxminddb-1.8.0/src/.libs/libmaxminddb.so.0.0.7",
-       },
-    }
+    ]]
 }
