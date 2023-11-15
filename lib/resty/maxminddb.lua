@@ -160,9 +160,34 @@ local MMDB_DATA_TYPE_END_MARKER                     =   13
 local MMDB_DATA_TYPE_BOOLEAN                        =   14
 local MMDB_DATA_TYPE_FLOAT                          =   15
 
--- copy from https://github.com/lilien1010/lua-resty-maxminddb/blob/f96633e2428f8f7bcc1e2a7a28b747b33233a8db/resty/maxminddb.lua#L136-L138
--- you should install the libmaxminddb to your system
-local maxm                                          = ffi.load('libmaxminddb')
+local function load_shared_lib(so_name)
+  local tried_paths = {}
+  local i = 1
+
+  for k, _ in package.cpath:gmatch("[^;]+") do
+      local fpath = k:match("(.*/)")
+      fpath = fpath .. so_name
+      local f = io.open(fpath)
+      if f ~= nil then
+          io.close(f)
+          return ffi.load(fpath)
+      end
+      tried_paths[i] = fpath
+      i = i + 1
+  end
+  
+  -- load from system path
+  local slm = ffi.load(so_name)
+  if slm ~= nil then
+      return slm
+  end
+
+  tried_paths[#tried_paths + 1] =
+      'tried above paths but can not load ' .. so_name
+  error(table.concat(tried_paths, '\n'))
+end
+
+local maxm = load_shared_lib("libmaxminddb.so")
 --https://github.com/maxmind/libmaxminddb
 
 local function mmdb_strerror(rc)
