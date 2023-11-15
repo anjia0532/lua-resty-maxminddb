@@ -20,15 +20,3 @@ dependencies = {
    "lua >= 5.1, < 5.2"
    -- If you depend on other rocks, add them here
 }
-build = {
-    install = {
-       lua = {
-           ["resty.maxminddb"] = "lib/resty/maxminddb.lua",
-       },
-       lib = {
-           ["libmaxminddb.so"] = "libmaxminddb-1.6.0/src/.libs/libmaxminddb.so.0.0.7",
-           ["libmaxminddb.so.0 "] = "libmaxminddb-1.6.0/src/.libs/libmaxminddb.so.0.0.7",
-           ["libmaxminddb.so.0.0.7"] = "libmaxminddb-1.6.0/src/.libs/libmaxminddb.so.0.0.7",
-       },
-    },
-}
