@@ -20,3 +20,9 @@ dependencies = {
    "lua >= 5.1, < 5.2"
    -- If you depend on other rocks, add them here
 }
+build = {
+    type = "builtin",
+    modules = {
+        ["resty.maxminddb"] = "../lib/resty/maxminddb.lua",
+    }
+}
