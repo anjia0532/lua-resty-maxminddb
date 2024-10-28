@@ -25,7 +25,7 @@ local tab_isarray   = require ('table.isarray')
 local tab_nkeys     = require ('table.nkeys')
 
 local _M    ={}
-_M._VERSION = '1.3.3'
+_M._VERSION = '1.3.4'
 local mt = { __index = _M }
 
 -- copy from https://github.com/lilien1010/lua-resty-maxminddb/blob/f96633e2428f8f7bcc1e2a7a28b747b33233a8db/resty/maxminddb.lua#L36-L126
