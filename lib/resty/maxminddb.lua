@@ -178,9 +178,14 @@ local function gai_strerror(rc)
     return ffi_str(C.gai_strerror(rc))
 end
 
-function _M.init(dbfile)
-  if not initted then
-    local maxmind_ready   = maxm.MMDB_open(dbfile,0,mmdb)
+function _M.init(profiles)
+
+  for profile, location in pairs(profiles) do
+
+    _D[profile] = {}
+    _D[profile].maxm = ffi.load('libmaxminddb')
+    _D[profile].mmdb = ffi_new('MMDB_s')
+    local maxmind_ready = _D[profile].maxm.MMDB_open(location, 0, _D[profile].mmdb)
 
     if maxmind_ready ~= MMDB_SUCCESS then
         return nil, mmdb_strerror(maxmind_ready)
@@ -366,7 +371,7 @@ function _M.lookup(ip, lookup_path)
   end
 
   if status ~= MMDB_SUCCESS then
-    return nil,'get entry data failed: ' .. mmdb_strerror(status)
+    return nil,'get entry data failed: ' .. mmdb_strerror(profile, status)
   end
 
   local head = entry_data_list[0] -- Save so this can be passed to free fn.
