@@ -24,6 +24,7 @@ local C                   = ffi.C
 local tab_isarray   = require ('table.isarray')
 local tab_nkeys     = require ('table.nkeys')
 
+local _D    ={}
 local _M    ={}
 _M._VERSION = '1.3.4'
 local mt = { __index = _M }
@@ -163,15 +164,10 @@ local MMDB_DATA_TYPE_END_MARKER                     =   13
 local MMDB_DATA_TYPE_BOOLEAN                        =   14
 local MMDB_DATA_TYPE_FLOAT                          =   15
 
--- copy from https://github.com/lilien1010/lua-resty-maxminddb/blob/f96633e2428f8f7bcc1e2a7a28b747b33233a8db/resty/maxminddb.lua#L136-L138
--- you should install the libmaxminddb to your system
-local maxm                                          = ffi.load('libmaxminddb')
---https://github.com/maxmind/libmaxminddb
-local mmdb                                          = ffi_new('MMDB_s')
 local initted                                       = false
 
 local function mmdb_strerror(rc)
-    return ffi_str(maxm.MMDB_strerror(rc))
+    return ffi_str(ffi.C.MMDB_strerror(rc))
 end
 
 local function gai_strerror(rc)
@@ -191,15 +187,31 @@ function _M.init(profiles)
         return nil, mmdb_strerror(maxmind_ready)
     end
 
-    initted = true
+    -- Set up garbage collection for each profile
+    ffi_gc(_D[profile].mmdb, _D[profile].maxm.MMDB_close)
 
-    ffi_gc(mmdb, maxm.MMDB_close)
+    initted = true
   end
   return initted
 end
 
 function _M.initted()
     return initted
+end
+
+function _M.get_profiles()
+    if not initted then
+        return nil, "not initialized"
+    end
+    local profiles = {}
+    for profile, _ in pairs(_D) do
+        table.insert(profiles, profile)
+    end
+    return profiles
+end
+
+function _M.has_profile(profile)
+    return initted and _D[profile] ~= nil
 end
 
 -- https://github.com/maxmind/libmaxminddb/blob/master/src/maxminddb.c#L1938
@@ -320,11 +332,27 @@ local function _dump_entry_data_list(entry_data_list,status)
   return entry_data_list,status,result
 end
 
-function _M.lookup(ip, lookup_path)
+function _M.lookup(ip, lookup_path, profile)
 
   if not initted then
       return nil, "not initialized"
   end
+
+  -- Use default profile if none specified, or first available profile
+  if not profile then
+      for p, _ in pairs(_D) do
+          profile = p
+          break
+      end
+  end
+
+  if not profile or not _D[profile] then
+      return nil, "profile not found: " .. (profile or "nil")
+  end
+
+  local profile_data = _D[profile]
+  local maxm = profile_data.maxm
+  local mmdb = profile_data.mmdb
 
   -- copy from https://github.com/lilien1010/lua-resty-maxminddb/blob/f96633e2428f8f7bcc1e2a7a28b747b33233a8db/resty/maxminddb.lua#L159-L176
   local gai_error = ffi_new('int[1]')
@@ -371,7 +399,7 @@ function _M.lookup(ip, lookup_path)
   end
 
   if status ~= MMDB_SUCCESS then
-    return nil,'get entry data failed: ' .. mmdb_strerror(profile, status)
+    return nil,'get entry data failed: ' .. mmdb_strerror(status)
   end
 
   local head = entry_data_list[0] -- Save so this can be passed to free fn.
