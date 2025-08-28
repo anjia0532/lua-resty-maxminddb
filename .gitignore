@@ -42,3 +42,4 @@ luac.out
 .idea/
 
 .vscode/
+geoipupdate_data/
