@@ -116,7 +116,7 @@ server {
             local res,err = geo.lookup(ngx.var.arg_ip or ngx.var.remote_addr)
 
             -- Multi database support
-            -- local res,err = geo.lookup(ngx.var.arg_ip or ngx.var.remote_addr, nil, "city")
+            -- local res,err = geo.lookup(ngx.var.arg_ip or ngx.var.remote_addr, nil, ngx.var.arg_type or 'city')
 
             if not res then
                 ngx.log(ngx.ERR,'failed to lookup by ip ,reason:',err)
@@ -132,7 +132,7 @@ server {
 
 ```bash
   #ipv4
-  $ curl localhost/?ip=114.114.114.114&node=city
+  $ curl localhost/?ip=114.114.114.114&node=city&type=city
 
   #ipv6
   #$ curl localhost/?ip=2001:4860:0:1001::3004:ef68&node=country
