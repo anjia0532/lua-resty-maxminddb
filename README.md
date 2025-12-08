@@ -276,6 +276,6 @@ limitations under the License.
 [linkGeolite2FreeDownloadableDatabases]: http://dev.maxmind.com/geoip/geoip2/geolite2/
 [maxmind/geoipupdate]: https://github.com/maxmind/geoipupdate
 [linkGeoip2CityAndCountryCsvDatabases]: https://dev.maxmind.com/geoip/geoip2/geoip2-city-country-csv-databases/
-[maxmind/libmaxminddb#source#lookup_and_print]: https://github.com/maxmind/libmaxminddb/blob/master/bin/mmdblookup.c#L262
-[maxmind/libmaxminddb#source#dump_entry_data_list]: https://github.com/maxmind/libmaxminddb/blob/master/src/maxminddb.c#L1938
+[maxmind/libmaxminddb#source#lookup_and_print]: https://github.com/maxmind/libmaxminddb/blob/1.12.2/bin/mmdblookup.c#L496-L557
+[maxmind/libmaxminddb#source#dump_entry_data_list]: https://github.com/maxmind/libmaxminddb/blob/1.12.2/src/maxminddb.c#L1963-L2132
 [lilien1010/lua-resty-maxminddb]: https://github.com/lilien1010/lua-resty-maxminddb
