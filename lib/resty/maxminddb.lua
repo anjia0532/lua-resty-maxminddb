@@ -14,164 +14,177 @@
 
 -- copy from https://github.com/lilien1010/lua-resty-maxminddb/blob/f96633e2428f8f7bcc1e2a7a28b747b33233a8db/resty/maxminddb.lua#L5-L12
 
-local ffi                 = require ('ffi')
-local ffi_new             = ffi.new
-local ffi_str             = ffi.string
-local ffi_cast            = ffi.cast
-local ffi_gc              = ffi.gc
-local C                   = ffi.C
+local ffi = require('ffi')
+local ffi_new = ffi.new
+local ffi_str = ffi.string
+local ffi_cast = ffi.cast
+local ffi_gc = ffi.gc
 
-local tab_isarray   = require ('table.isarray')
-local tab_nkeys     = require ('table.nkeys')
+local tab_isarray = require('table.isarray')
+local tab_nkeys = require('table.nkeys')
 
-local _D    ={}
-local _M    ={}
-_M._VERSION = '1.3.6'
+local _D = {}
+local _M = {}
+_M._VERSION = '1.3.7'
 local mt = { __index = _M }
 
 -- copy from https://github.com/lilien1010/lua-resty-maxminddb/blob/f96633e2428f8f7bcc1e2a7a28b747b33233a8db/resty/maxminddb.lua#L36-L126
-ffi.cdef[[
-
+ffi.cdef [[
 typedef long int ssize_t;
 
 typedef unsigned int mmdb_uint128_t __attribute__ ((__mode__(TI)));
 
 typedef struct MMDB_entry_s {
-  struct MMDB_s *mmdb;
-  uint32_t offset;
+    struct MMDB_s *mmdb;
+    uint32_t offset;
 } MMDB_entry_s;
 
 typedef struct MMDB_lookup_result_s {
-  bool found_entry;
-  MMDB_entry_s entry;
-  uint16_t netmask;
+    bool found_entry;
+    MMDB_entry_s entry;
+    uint16_t netmask;
 } MMDB_lookup_result_s;
 
 typedef struct MMDB_entry_data_s {
-  bool has_data;
-  union {
-    uint32_t pointer;
-    const char *utf8_string;
-    double double_value;
-    const uint8_t *bytes;
-    uint16_t uint16;
-    uint32_t uint32;
-    int32_t int32;
-    uint64_t uint64;
-    mmdb_uint128_t uint128;
-    bool boolean;
-    float float_value;
-  };
+    bool has_data;
+    union {
+        uint32_t pointer;
+        const char *utf8_string;
+        double double_value;
+        const uint8_t *bytes;
+        uint16_t uint16;
+        uint32_t uint32;
+        int32_t int32;
+        uint64_t uint64;
+        mmdb_uint128_t uint128;
+        bool boolean;
+        float float_value;
+    };
 
-  uint32_t offset;
-  uint32_t offset_to_next;
-  uint32_t data_size;
-  uint32_t type;
+    uint32_t offset;
+    uint32_t offset_to_next;
+    uint32_t data_size;
+    uint32_t type;
 } MMDB_entry_data_s;
 
 typedef struct MMDB_entry_data_list_s {
-  MMDB_entry_data_s entry_data;
-  struct MMDB_entry_data_list_s *next;
+    MMDB_entry_data_s entry_data;
+    struct MMDB_entry_data_list_s *next;
+    void *pool;
 } MMDB_entry_data_list_s;
 
 typedef struct MMDB_description_s {
-  const char *language;
-  const char *description;
+    const char *language;
+    const char *description;
 } MMDB_description_s;
 
 typedef struct MMDB_metadata_s {
-  uint32_t node_count;
-  uint16_t record_size;
-  uint16_t ip_version;
-  const char *database_type;
-  struct {
-    size_t count;
-    const char **names;
-  } languages;
-  uint16_t binary_format_major_version;
-  uint16_t binary_format_minor_version;
-  uint64_t build_epoch;
-  struct {
-    size_t count;
-    MMDB_description_s **descriptions;
-  } description;
+    uint32_t node_count;
+    uint16_t record_size;
+    uint16_t ip_version;
+    const char *database_type;
+    struct {
+        size_t count;
+        const char **names;
+    } languages;
+    uint16_t binary_format_major_version;
+    uint16_t binary_format_minor_version;
+    uint64_t build_epoch;
+    struct {
+        size_t count;
+        MMDB_description_s **descriptions;
+    } description;
 } MMDB_metadata_s;
 
 typedef struct MMDB_ipv4_start_node_s {
-  uint16_t netmask;
-  uint32_t node_value;
+    uint16_t netmask;
+    uint32_t node_value;
 } MMDB_ipv4_start_node_s;
 
+typedef struct MMDB_search_node_s {
+    uint64_t left_record;
+    uint64_t right_record;
+    uint8_t left_record_type;
+    uint8_t right_record_type;
+    MMDB_entry_s left_record_entry;
+    MMDB_entry_s right_record_entry;
+} MMDB_search_node_s;
+
 typedef struct MMDB_s {
-  uint32_t flags;
-  const char *filename;
-  ssize_t file_size;
-  const uint8_t *file_content;
-  const uint8_t *data_section;
-  uint32_t data_section_size;
-  const uint8_t *metadata_section;
-  uint32_t metadata_section_size;
-  uint16_t full_record_byte_size;
-  uint16_t depth;
-  MMDB_ipv4_start_node_s ipv4_start_node;
-  MMDB_metadata_s metadata;
+    uint32_t flags;
+    const char *filename;
+    ssize_t file_size;
+    const uint8_t *file_content;
+    const uint8_t *data_section;
+    uint32_t data_section_size;
+    const uint8_t *metadata_section;
+    uint32_t metadata_section_size;
+    uint16_t full_record_byte_size;
+    uint16_t depth;
+    MMDB_ipv4_start_node_s ipv4_start_node;
+    MMDB_metadata_s metadata;
 } MMDB_s;
 
-typedef  char * pchar;
+typedef struct sockaddr sockaddr;
 
-MMDB_lookup_result_s MMDB_lookup_string(MMDB_s *const mmdb,   const char *const ipstr, int *const gai_error,int *const mmdb_error);
 int MMDB_open(const char *const filename, uint32_t flags, MMDB_s *const mmdb);
-int MMDB_aget_value(MMDB_entry_s *const start,  MMDB_entry_data_s *const entry_data,  const char *const *const path);
-char *MMDB_strerror(int error_code);
-
+MMDB_lookup_result_s MMDB_lookup_string(MMDB_s *const mmdb, const char *const ipstr, int *const gai_error, int *const mmdb_error);
+MMDB_lookup_result_s MMDB_lookup_sockaddr(const MMDB_s *const mmdb, const struct sockaddr *const sockaddr, int *const mmdb_error);
+int MMDB_read_node(const MMDB_s *const mmdb, uint32_t node_number, MMDB_search_node_s *const node);
+int MMDB_get_value(MMDB_entry_s *const start, MMDB_entry_data_s *const entry_data, ...);
+int MMDB_vget_value(MMDB_entry_s *const start, MMDB_entry_data_s *const entry_data, va_list va_path);
+int MMDB_aget_value(MMDB_entry_s *const start, MMDB_entry_data_s *const entry_data, const char *const *const path);
 int MMDB_get_entry_data_list(MMDB_entry_s *start, MMDB_entry_data_list_s **const entry_data_list);
 void MMDB_free_entry_data_list(MMDB_entry_data_list_s *const entry_data_list);
+int MMDB_get_metadata_as_entry_data_list(MMDB_s *const mmdb, MMDB_entry_data_list_s **const entry_data_list);
 void MMDB_close(MMDB_s *const mmdb);
+const char *MMDB_lib_version(void);
+const char *MMDB_strerror(int error_code);
 const char *gai_strerror(int errcode);
 ]]
 
 -- error codes
--- https://github.com/maxmind/libmaxminddb/blob/master/include/maxminddb.h#L66
-local MMDB_SUCCESS                                  =   0
-local MMDB_FILE_OPEN_ERROR                          =   1
-local MMDB_CORRUPT_SEARCH_TREE_ERROR                =   2
-local MMDB_INVALID_METADATA_ERROR                   =   3
-local MMDB_IO_ERROR                                 =   4
-local MMDB_OUT_OF_MEMORY_ERROR                      =   5
-local MMDB_UNKNOWN_DATABASE_FORMAT_ERROR            =   6
-local MMDB_INVALID_DATA_ERROR                       =   7
-local MMDB_INVALID_LOOKUP_PATH_ERROR                =   8
-local MMDB_LOOKUP_PATH_DOES_NOT_MATCH_DATA_ERROR    =   9
-local MMDB_INVALID_NODE_NUMBER_ERROR                =   10
-local MMDB_IPV6_LOOKUP_IN_IPV4_DATABASE_ERROR       =   11
+-- https://github.com/maxmind/libmaxminddb/blob/1.12.2/include/maxminddb.h#L60-L71
+local MMDB_SUCCESS = 0
+local MMDB_FILE_OPEN_ERROR = 1
+local MMDB_CORRUPT_SEARCH_TREE_ERROR = 2
+local MMDB_INVALID_METADATA_ERROR = 3
+local MMDB_IO_ERROR = 4
+local MMDB_OUT_OF_MEMORY_ERROR = 5
+local MMDB_UNKNOWN_DATABASE_FORMAT_ERROR = 6
+local MMDB_INVALID_DATA_ERROR = 7
+local MMDB_INVALID_LOOKUP_PATH_ERROR = 8
+local MMDB_LOOKUP_PATH_DOES_NOT_MATCH_DATA_ERROR = 9
+local MMDB_INVALID_NODE_NUMBER_ERROR = 10
+local MMDB_IPV6_LOOKUP_IN_IPV4_DATABASE_ERROR = 11
 
 -- data type
--- https://github.com/maxmind/libmaxminddb/blob/master/include/maxminddb.h#L40
-local MMDB_DATA_TYPE_EXTENDED                       =   0
-local MMDB_DATA_TYPE_POINTER                        =   1
-local MMDB_DATA_TYPE_UTF8_STRING                    =   2
-local MMDB_DATA_TYPE_DOUBLE                         =   3
-local MMDB_DATA_TYPE_BYTES                          =   4
-local MMDB_DATA_TYPE_UINT16                         =   5
-local MMDB_DATA_TYPE_UINT32                         =   6
-local MMDB_DATA_TYPE_MAP                            =   7
-local MMDB_DATA_TYPE_INT32                          =   8
-local MMDB_DATA_TYPE_UINT64                         =   9
-local MMDB_DATA_TYPE_UINT128                        =   10
-local MMDB_DATA_TYPE_ARRAY                          =   11
-local MMDB_DATA_TYPE_CONTAINER                      =   12
-local MMDB_DATA_TYPE_END_MARKER                     =   13
-local MMDB_DATA_TYPE_BOOLEAN                        =   14
-local MMDB_DATA_TYPE_FLOAT                          =   15
+-- https://github.com/maxmind/libmaxminddb/blob/1.12.2/include/maxminddb.h#L33-L48
+local MMDB_DATA_TYPE_EXTENDED = 0
+local MMDB_DATA_TYPE_POINTER = 1
+local MMDB_DATA_TYPE_UTF8_STRING = 2
+local MMDB_DATA_TYPE_DOUBLE = 3
+local MMDB_DATA_TYPE_BYTES = 4
+local MMDB_DATA_TYPE_UINT16 = 5
+local MMDB_DATA_TYPE_UINT32 = 6
+local MMDB_DATA_TYPE_MAP = 7
+local MMDB_DATA_TYPE_INT32 = 8
+local MMDB_DATA_TYPE_UINT64 = 9
+local MMDB_DATA_TYPE_UINT128 = 10
+local MMDB_DATA_TYPE_ARRAY = 11
+local MMDB_DATA_TYPE_CONTAINER = 12
+local MMDB_DATA_TYPE_END_MARKER = 13
+local MMDB_DATA_TYPE_BOOLEAN = 14
+local MMDB_DATA_TYPE_FLOAT = 15
 
-local initted                                       = false
+local initted = false
 
-local function mmdb_strerror(rc)
-    return ffi_str(ffi.C.MMDB_strerror(rc))
+local function mmdb_strerror(lib, rc)
+  return ffi_str(lib.MMDB_strerror(rc))
 end
 
-local function gai_strerror(rc)
-    return ffi_str(C.gai_strerror(rc))
+local function gai_strerror(lib, rc)
+  return ffi_str(lib.gai_strerror(rc))
 end
 
 function _M.init(profiles)
@@ -189,8 +202,11 @@ function _M.init(profiles)
     _D[profile].mmdb = ffi_new('MMDB_s')
     local maxmind_ready = _D[profile].maxm.MMDB_open(location, 0, _D[profile].mmdb)
 
+    ngx.log(ngx.INFO, "init maxminddb profile: ", profile, " location: ", location, " init result: ",
+      mmdb_strerror(_D[profile].maxm, maxmind_ready), "MMDB lib version:", ffi_str(_D[profile].maxm.MMDB_lib_version()))
+
     if maxmind_ready ~= MMDB_SUCCESS then
-        return nil, mmdb_strerror(maxmind_ready)
+      return nil, mmdb_strerror(_D[profile].maxm, maxmind_ready)
     end
 
     -- Set up garbage collection for each profile
@@ -202,30 +218,30 @@ function _M.init(profiles)
 end
 
 function _M.initted()
-    return initted
+  return initted
 end
 
 function _M.get_profiles()
-    if not initted then
-        return nil, "not initialized"
-    end
-    local profiles = {}
-    for profile, _ in pairs(_D) do
-        table.insert(profiles, profile)
-    end
-    return profiles
+  if not initted then
+    return nil, "not initialized"
+  end
+  local profiles = {}
+  for profile, _ in pairs(_D) do
+    table.insert(profiles, profile)
+  end
+  return profiles
 end
 
 function _M.has_profile(profile)
-    return initted and _D[profile] ~= nil
+  return initted and _D[profile] ~= nil
 end
 
 -- https://github.com/maxmind/libmaxminddb/blob/master/src/maxminddb.c#L1938
 -- LOCAL MMDB_entry_data_list_s *dump_entry_data_list( FILE *stream, MMDB_entry_data_list_s *entry_data_list, int indent, int *status)
-local function _dump_entry_data_list(entry_data_list,status)
+local function _dump_entry_data_list(entry_data_list, status)
 
   if not entry_data_list then
-    return nil,MMDB_INVALID_DATA_ERROR
+    return nil, MMDB_INVALID_DATA_ERROR
   end
 
   local entry_data_item = entry_data_list[0].entry_data
@@ -240,33 +256,33 @@ local function _dump_entry_data_list(entry_data_list,status)
 
     entry_data_list = entry_data_list[0].next
 
-    while(size > 0 and entry_data_list)
+    while (size > 0 and entry_data_list)
     do
       entry_data_item = entry_data_list[0].entry_data
       data_type = entry_data_item.type
       data_size = entry_data_item.data_size
 
-      if MMDB_DATA_TYPE_UTF8_STRING  ~= data_type then
-        return nil,MMDB_INVALID_DATA_ERROR
+      if MMDB_DATA_TYPE_UTF8_STRING ~= data_type then
+        return nil, MMDB_INVALID_DATA_ERROR
       end
 
-      local key = ffi_str(entry_data_item.utf8_string,data_size)
+      local key = ffi_str(entry_data_item.utf8_string, data_size)
 
       if not key then
-        return nil,MMDB_OUT_OF_MEMORY_ERROR
+        return nil, MMDB_OUT_OF_MEMORY_ERROR
       end
 
       local val
       entry_data_list = entry_data_list[0].next
-      entry_data_list,status,val = _dump_entry_data_list(entry_data_list)
+      entry_data_list, status, val = _dump_entry_data_list(entry_data_list)
 
       if status ~= MMDB_SUCCESS then
-        return nil,status
+        return nil, status
       end
 
       result[key] = val
 
-      size = size -1
+      size = size - 1
     end
 
 
@@ -277,13 +293,13 @@ local function _dump_entry_data_list(entry_data_list,status)
     entry_data_list = entry_data_list[0].next
 
     local i = 1
-    while(i <= size and entry_data_list)
+    while (i <= size and entry_data_list)
     do
       local val
-      entry_data_list,status,val = _dump_entry_data_list(entry_data_list)
+      entry_data_list, status, val = _dump_entry_data_list(entry_data_list)
 
       if status ~= MMDB_SUCCESS then
-        return nil,nil,val
+        return nil, nil, val
       end
 
       result[i] = val
@@ -301,16 +317,16 @@ local function _dump_entry_data_list(entry_data_list,status)
     -- other type "key":val
     -- default other type
     if data_type == MMDB_DATA_TYPE_UTF8_STRING then
-      val = ffi_str(entry_data_item.utf8_string,data_size)
+      val = ffi_str(entry_data_item.utf8_string, data_size)
       if not val then
         status = MMDB_OUT_OF_MEMORY_ERROR
-        return nil,status
+        return nil, status
       end
     elseif data_type == MMDB_DATA_TYPE_BYTES then
-      val = ffi_str(ffi_cast('char * ',entry_data_item.bytes),data_size)
+      val = ffi_str(ffi_cast('char * ', entry_data_item.bytes), data_size)
       if not val then
         status = MMDB_OUT_OF_MEMORY_ERROR
-        return nil,status
+        return nil, status
       end
     elseif data_type == MMDB_DATA_TYPE_DOUBLE then
       val = entry_data_item.double_value
@@ -327,7 +343,7 @@ local function _dump_entry_data_list(entry_data_list,status)
     elseif data_type == MMDB_DATA_TYPE_INT32 then
       val = entry_data_item.int32
     else
-      return nil,MMDB_INVALID_DATA_ERROR
+      return nil, MMDB_INVALID_DATA_ERROR
     end
 
     result = val
@@ -335,25 +351,25 @@ local function _dump_entry_data_list(entry_data_list,status)
   end
 
   status = MMDB_SUCCESS
-  return entry_data_list,status,result
+  return entry_data_list, status, result
 end
 
 function _M.lookup(ip, lookup_path, profile)
 
   if not initted then
-      return nil, "not initialized"
+    return nil, "not initialized"
   end
 
   -- Use default profile if none specified, or first available profile
   if not profile then
-      for p, _ in pairs(_D) do
-          profile = p
-          break
-      end
+    for p, _ in pairs(_D) do
+      profile = p
+      break
+    end
   end
 
   if not profile or not _D[profile] then
-      return nil, "profile not found: " .. (profile or "nil")
+    return nil, "profile not found: " .. (profile or "nil")
   end
 
   local profile_data = _D[profile]
@@ -364,21 +380,21 @@ function _M.lookup(ip, lookup_path, profile)
   local gai_error = ffi_new('int[1]')
   local mmdb_error = ffi_new('int[1]')
 
-  local result = maxm.MMDB_lookup_string(mmdb,ip,gai_error,mmdb_error)
+  local result = maxm.MMDB_lookup_string(mmdb, ip, gai_error, mmdb_error)
 
   if mmdb_error[0] ~= MMDB_SUCCESS then
-    return nil,'lookup failed: ' .. mmdb_strerror(mmdb_error[0])
+    return nil, 'lookup failed: ' .. mmdb_strerror(maxm, mmdb_error[0])
   end
 
   if gai_error[0] ~= MMDB_SUCCESS then
-    return nil,'lookup failed: ' .. gai_strerror(gai_error[0])
+    return nil, 'lookup failed: ' .. gai_strerror(maxm, gai_error[0])
   end
 
   if true ~= result.found_entry then
-    return nil,'not found'
+    return nil, 'not found'
   end
 
-  local entry_data_list = ffi_cast('MMDB_entry_data_list_s **const',ffi_new("MMDB_entry_data_list_s"))
+  local entry_data_list = ffi_cast('MMDB_entry_data_list_s **const', ffi_new("MMDB_entry_data_list_s"))
   local status
 
   if lookup_path then
@@ -388,7 +404,7 @@ function _M.lookup(ip, lookup_path, profile)
 
     local lookup_path_len = tab_nkeys(lookup_path)
     local entry_data = ffi_cast('MMDB_entry_data_s *const', ffi_new("MMDB_entry_data_s"))
-    local path = ffi_new('const char * [?]', lookup_path_len+1, lookup_path)  -- +1 for null termination
+    local path = ffi_new('const char * [?]', lookup_path_len + 1, lookup_path)  -- +1 for null termination
     path[lookup_path_len] = ffi.NULL
 
     status = maxm.MMDB_aget_value(result.entry, entry_data, path)
@@ -396,26 +412,25 @@ function _M.lookup(ip, lookup_path, profile)
       if entry_data.offset == 0 then
         return nil, 'no data found at the lookup path'
       end
-      local entry = ffi_new("MMDB_entry_s", {mmdb=mmdb, offset=entry_data.offset})
+      local entry = ffi_new("MMDB_entry_s", { mmdb = mmdb, offset = entry_data.offset })
       status = maxm.MMDB_get_entry_data_list(entry, entry_data_list)
     end
 
   else
-        status = maxm.MMDB_get_entry_data_list(result.entry,entry_data_list)
+    status = maxm.MMDB_get_entry_data_list(result.entry, entry_data_list)
   end
 
   if status ~= MMDB_SUCCESS then
-    return nil,'get entry data failed: ' .. mmdb_strerror(status)
+    return nil, 'get entry data failed: ' .. mmdb_strerror(maxm, status)
   end
 
   local head = entry_data_list[0] -- Save so this can be passed to free fn.
-  local _,status,result = _dump_entry_data_list(entry_data_list)
+  local _, status, result = _dump_entry_data_list(entry_data_list)
   maxm.MMDB_free_entry_data_list(head)
 
   if status ~= MMDB_SUCCESS then
-    return nil,'dump entry data failed: ' .. mmdb_strerror(status)
+    return nil, 'dump entry data failed: ' .. mmdb_strerror(maxm, status)
   end
-
 
   return result
 end

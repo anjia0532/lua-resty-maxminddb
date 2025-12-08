@@ -38,6 +38,7 @@ wget https://github.com/maxmind/libmaxminddb/releases/download/1.12.2/libmaxmind
   make -j && \
   make check && \
   make install && \
+  ln -s /usr/local/lib/libmaxminddb.so.0.0.7 /usr/lib/libmaxminddb.so && \
   ldconfig && \
   rm -rf /tmp/*
   
